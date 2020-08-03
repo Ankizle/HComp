@@ -4,7 +4,7 @@ fn main() {
 
     let args: Vec<String> = std::env::args().collect();
 
-    if args.len() == 2 { //if the dev didn't provide an option
+    if args.len() < 3 { //if the dev didn't provide an option
 
         //throw an error
         println!("Expected at least one option to be passed to hcomp");
@@ -16,5 +16,8 @@ fn main() {
 
     if option == "compile" {
         hcomp::compile::start(directory);
+    } else {
+        println!("{} is not an option", option);
+        std::process::exit(1);
     }
 }
