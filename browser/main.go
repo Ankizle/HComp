@@ -1,9 +1,6 @@
 package main
 
 import (
-	"io"
-	"os"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -20,9 +17,7 @@ func main() {
 	// Main menu
 	fileMenu := fyne.NewMenu("File",
 		fyne.NewMenuItem("Download Executable", func() {
-			dst, _ := os.Create("C:/Users/ankiz/Downloads/HComp.exe")
-			src, _ := os.Open("./HComp.exe")
-			io.Copy(dst, src)
+			//TODO
 		}),
 		fyne.NewMenuItem("Quit", func() { bapp.Quit() }),
 	)
