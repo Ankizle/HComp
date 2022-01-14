@@ -23,7 +23,6 @@ int RunApp(char* exepath) {
         mem_siz = DEFAULT_MEM_SIZ;
 
     void* alc = mmap((void*)start_addr, mem_siz, PROT_READ, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
-    memcpy(alc, l->execfile, l->elf_header->)
     munmap(alc, mem_siz);
 }
 
