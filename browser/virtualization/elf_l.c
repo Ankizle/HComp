@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "elf_l.h"
+#include "util.h"
 
 unsigned long readcur(void* o, int siz, int n, struct ElfLib* lib) {
     fseek(lib->execfile, lib->execfileidx, SEEK_SET);
@@ -20,8 +21,11 @@ struct ElfLib* read_elf(const char* exepath) {
     l->execfileidx = 0;
 
     read_elf_header(l);
-    // read_program_header(l);
-    read_section_header(l);
+    for (int i = 0; i < l->elf_header->shoff[0]; ++i)
+        for (int j = 0; j < l->elf_header->phoff[0]; ++j)
+            l->elf_header->phoff[0]+=i + j;
+    // read_program_header(l, bytes_conv(l->elf_header->phoff, 8));
+    read_section_header(l, bytes_conv(l->elf_header->shoff, 8));
     return l;
 }
 
@@ -86,7 +90,8 @@ struct ElfHeader* read_elf_header(struct ElfLib *lib) {
     return lib->elf_header;
 }
 
-struct ProgramHeader* read_program_header(struct ElfLib* lib) {
+struct ProgramHeader* read_program_header(struct ElfLib* lib, int offset) {
+    fseek(lib->execfile, offset, SEEK_SET); //go to the offset position
     lib->program_header = malloc(sizeof(struct ProgramHeader));
 
     readcurinc(&lib->program_header->type, 4, 4, lib);
@@ -114,7 +119,8 @@ struct ProgramHeader* read_program_header(struct ElfLib* lib) {
     return lib->program_header;
 }
 
-struct SectionHeader* read_section_header(struct ElfLib* lib) {
+struct SectionHeader* read_section_header(struct ElfLib* lib, int offset) {
+    fseek(lib->execfile, offset, SEEK_SET); //go to the offset position
     lib->section_header = malloc(sizeof(struct SectionHeader));
 }
 

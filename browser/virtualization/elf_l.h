@@ -74,8 +74,8 @@ unsigned long readcur(void* o, int siz, int n, struct ElfLib* lib);
 unsigned long readcurinc(void* o, int siz, int n, struct ElfLib* lib); 
 
 struct ElfHeader* read_elf_header(struct ElfLib* lib);
-struct ProgramHeader* read_program_header(struct ElfLib* lib);
-struct SectionHeader* read_section_header(struct ElfLib* lib);
+struct ProgramHeader* read_program_header(struct ElfLib* lib, int offset);
+struct SectionHeader* read_section_header(struct ElfLib* lib, int offset);
 
 struct ElfLib* read_elf(const char* exepath);
 void clean_elf(struct ElfLib* lib);
