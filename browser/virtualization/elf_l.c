@@ -1,135 +1,163 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include "elf_l.h"
 #include "util.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
 
-unsigned long readcur(void* o, int siz, int n, struct ElfLib* lib) {
-    fseek(lib->execfile, lib->execfileidx, SEEK_SET);
-    return fread(o, siz, n, lib->execfile);
+unsigned long readcur(void *o, int n, struct ElfLib *lib) {
+  fseek(lib->execfile, lib->execfileidx, SEEK_SET);
+  return fread(o, sizeof(char), n, lib->execfile);
 }
 
-unsigned long readcurinc(void* o, int siz, int n, struct ElfLib* lib) {
-    fseek(lib->execfile, lib->execfileidx, SEEK_SET);
-    lib->execfileidx+=n;
-    return fread(o, siz, n, lib->execfile);
+unsigned long readcurinc(void *o, int n, struct ElfLib *lib) {
+  unsigned long r = readcur(o, n, lib);
+  lib->execfileidx+=n;
+  return r;
 }
 
-struct ElfLib* read_elf(const char* exepath) {
-    struct ElfLib* l = malloc(sizeof(struct ElfLib));
-    l->execfilename = exepath;
-    l->execfile = fopen(exepath, "rb");
-    l->execfileidx = 0;
-
-    read_elf_header(l);
-    for (int i = 0; i < l->elf_header->shoff[0]; ++i)
-        for (int j = 0; j < l->elf_header->phoff[0]; ++j)
-            l->elf_header->phoff[0]+=i + j;
-    // read_program_header(l, bytes_conv(l->elf_header->phoff, 8));
-    read_section_header(l, bytes_conv(l->elf_header->shoff, 8));
-    return l;
+unsigned long readpadcur(int n, struct ElfLib* lib) {
+  lib->execfileidx+=n;
+  return 0;
 }
 
-struct ElfHeader* read_elf_header(struct ElfLib *lib) {
-    lib->elf_header = malloc(sizeof(struct ElfHeader));
+struct ElfLib *read_elf(const char *exepath) {
+  struct ElfLib *l = malloc(sizeof(struct ElfLib));
+  l->execfilename = exepath;
+  l->execfile = fopen(exepath, "rb");
+  l->execfileidx = 0;
 
-    //read the magic numbers 0x00 - 0x04
-    char magic[] = {0x7F, 'E', 'L', 'F'};
-    for (;lib->execfileidx < 4;lib->execfileidx++) {
-        char cur;
-        readcur(&cur, 1, 1, lib);
-        if (cur != magic[lib->execfileidx]); //error: given binary is not an ELF
-    }
+  l->elf_header = read_elf_header(l);
 
-    //read bit-format (x86 or x86_64)
-    readcurinc(&lib->elf_header->bitformat, 1, 1, lib);
+  l->program_headers = malloc(bytes_conv(l->elf_header.phnum, 2) * sizeof(struct ProgramHeader));
+  for (int i = 0, cur = bytes_conv(l->elf_header.phoff, 8); i < bytes_conv(l->elf_header.phnum, 2); i++, cur+=bytes_conv(l->elf_header.phentsize, 2))
+    l->program_headers[i] = read_program_headers(l, cur);
+    
+  l->section_headers = malloc(bytes_conv(l->elf_header.shentnum, 2) * sizeof(struct SectionHeader));
+  for (int i = 0, cur = bytes_conv(l->elf_header.shoff, 8); i < bytes_conv(l->elf_header.shentnum, 2); i++, cur+=bytes_conv(l->elf_header.shentsize, 2))
+    l->section_headers[i] = read_section_headers(l, cur);
 
-    //read endianness
-    readcurinc(&lib->elf_header->endianness, 1, 1, lib);
+  return l;
+}
 
-    //read the ei_version (only valid value is 1)
-    readcurinc(&lib->elf_header->eiversion, 1, 1, lib);
+struct ElfHeader read_elf_header(struct ElfLib *lib) {
+  struct ElfHeader header;
 
-    //read the ABI
-    readcurinc(&lib->elf_header->osabi, 1, 1, lib);
+  // read the magic numbers 0x00 - 0x04
+  char magic[] = {0x7F, 'E', 'L', 'F'};
+  while (lib->execfileidx < 4) {
+    char cur;
+    readcurinc(&cur, 1, lib);
+    if (cur != magic[lib->execfileidx])
+      ; // error: given binary is not an ELF
+  }
 
-    //read the ABI version
-    readcurinc(&lib->elf_header->abiver, 1, 1, lib);
+  // read bit-format (x86 or x86_64)
+  readcurinc(&header.bitformat, 1, lib);
 
-    //read all the padding bits (and do nothing with them)
-    readcurinc(NULL, 0, 7, lib);
+  // read endianness
+  readcurinc(&header.endianness, 1, lib);
 
-    //read the executable type
-    readcurinc(lib->elf_header->exectype, 2, 2, lib);
+  // read the ei_version (only valid value is 1)
+  readcurinc(&header.eiversion, 1, lib);
 
-    //read the machine type
-    readcurinc(lib->elf_header->machinetype, 2, 2, lib);
+  // read the ABI
+  readcurinc(&header.osabi, 1, lib);
 
-    //read the version
-    readcurinc(&lib->elf_header->version, 1, 4, lib);
+  // read the ABI version
+  readcurinc(&header.abiver, 1, lib);
 
-    //read the entry point
-    int en_ph_sh_siz = 8; //the size of the next 3 entries in bytes (8 bytes in x64)
-    if (lib->elf_header->bitformat == 1)
-        //x86, 4 bytes long
+  // read all the padding bits (and do nothing with them)
+  readpadcur(7, lib);
+
+  // read the executable type
+  readcurinc(header.exectype, 2, lib);
+
+  // read the machine type
+  readcurinc(header.machinetype, 2, lib);
+
+  // read the version
+  readcurinc(header.version, 4, lib);
+
+    // read the entry point
+    int en_ph_sh_siz = 8; // the size of the next 3 entries in bytes (8 bytes in x64)
+    if (lib->elf_header.bitformat == 1)
+        // x86, 4 bytes long
         en_ph_sh_siz = 4;
 
-    readcurinc(lib->elf_header->entry, en_ph_sh_siz, en_ph_sh_siz, lib);
-    readcurinc(lib->elf_header->phoff, en_ph_sh_siz, en_ph_sh_siz, lib);
-    readcurinc(lib->elf_header->shoff, en_ph_sh_siz, en_ph_sh_siz, lib);
+  readcurinc(header.entry, en_ph_sh_siz, lib);
+  readcurinc(header.phoff, en_ph_sh_siz, lib);
+  readcurinc(header.shoff, en_ph_sh_siz, lib);
 
-    readcurinc(lib->elf_header->flags, 4, 4, lib);
-    readcurinc(lib->elf_header->ehsize, 2, 2, lib);
-    readcurinc(lib->elf_header->phnum, 2, 2, lib);
-    readcurinc(lib->elf_header->phnum, 2, 2, lib);
-    readcurinc(lib->elf_header->shentsize, 2, 2, lib);
-    readcurinc(lib->elf_header->shentnum, 2, 2, lib);
-    readcurinc(lib->elf_header->shstrndx, 2, 2, lib);
+  readcurinc(header.flags, 4, lib);
+  readcurinc(header.ehsize, 2, lib);
+  readcurinc(header.phentsize, 2, lib);
+  readcurinc(header.phnum, 2, lib);
+  readcurinc(header.shentsize, 2, lib);
+  readcurinc(header.shentnum, 2, lib);
+  readcurinc(header.shstrndx, 2, lib);
 
-    readcurinc(NULL, 0, 10, lib); //last 10 bytes are ending padding
+  readpadcur(0xa, lib); // last 10 bytes are ending padding
 
-    return lib->elf_header;
+  return header;
 }
 
-struct ProgramHeader* read_program_header(struct ElfLib* lib, int offset) {
-    fseek(lib->execfile, offset, SEEK_SET); //go to the offset position
-    lib->program_header = malloc(sizeof(struct ProgramHeader));
+struct ProgramHeader read_program_headers(struct ElfLib *lib, int offset) {
+  lib->execfileidx = offset; //go to the offset position
+  struct ProgramHeader header;
 
-    readcurinc(&lib->program_header->type, 4, 4, lib);
+  readcurinc(header.type, 4, lib);
 
-    int datsiz = lib->elf_header->bitformat == 1 ? 4 /*x86*/ : 8 /*x64*/;
+  int datsiz = lib->elf_header.bitformat == 1 ? 4 /*x86*/ : 8 /*x64*/;
 
-    if (datsiz == 8)
-        //on x64 the flags are stored here
-        readcurinc(lib->program_header->flags, datsiz, datsiz, lib);
-        //on x64 the flags are stored elsewhere
+  if (datsiz == 8)
+    // on x64 the flags are stored here
+    readcurinc(header.flags, 4, lib);
+  // on x86 the flags are stored elsewhere
 
-    readcurinc(lib->program_header->offset, datsiz, datsiz, lib);
-    readcurinc(lib->program_header->vaddr, datsiz, datsiz, lib);
-    readcurinc(lib->program_header->paddr, datsiz, datsiz, lib);
-    readcurinc(lib->program_header->filesz, datsiz, datsiz, lib);
+  readcurinc(header.offset, datsiz, lib);
+  readcurinc(header.vaddr, datsiz, lib);
+  readcurinc(header.paddr, datsiz, lib);
+  readcurinc(header.filesz, datsiz, lib);
 
-    if (datsiz == 4)
-        //on x86 the flags are stored here
-        readcurinc(lib->program_header->flags, datsiz, datsiz, lib);
+  if (datsiz == 4)
+    // on x86 the flags are stored here
+    readcurinc(header.flags, 4, lib);
 
-    readcurinc(lib->program_header->align, datsiz, datsiz, lib);
+  readcurinc(header.align, datsiz, lib);
 
-    readcurinc(NULL, 0, 0x18, lib); //0x18 bytes of padding
+  readpadcur(0x18, lib); // 0x18 bytes of padding
 
-    return lib->program_header;
+  return header;
 }
 
-struct SectionHeader* read_section_header(struct ElfLib* lib, int offset) {
-    fseek(lib->execfile, offset, SEEK_SET); //go to the offset position
-    lib->section_header = malloc(sizeof(struct SectionHeader));
+struct SectionHeader read_section_headers(struct ElfLib *lib, int offset) {
+  lib->execfileidx = offset;
+  struct SectionHeader header;
+
+  readcurinc(header.shname, 4, lib);
+  readcurinc(header.shtype, 4, lib);
+
+  int datsiz = lib->elf_header.bitformat == 1 ? 4 /*x86*/ : 8 /*x64*/;
+
+  readcurinc(header.shflags, datsiz, lib);
+  readcurinc(header.shaddr, datsiz, lib);
+  readcurinc(header.shoffset, datsiz, lib);
+  readcurinc(header.shsize, datsiz, lib);
+  readcurinc(header.shlink, 4, lib);
+  readcurinc(header.shinfo, 4, lib);
+  readcurinc(header.shaddralign, datsiz, lib);
+  readcurinc(header.shentsize, datsiz, lib);
+
+  //read the padding at the end
+  readpadcur(0x18, lib);
+
+  return header;
 }
 
-void clean_elf(struct ElfLib* lib) {
-    free(lib->elf_header);
+void clean_elf(struct ElfLib *lib) {
 
-    free(lib->program_header);
-
-    free(lib->section_header);
+    free(lib->program_headers);
+    free(lib->section_headers);
 
     free(lib);
 }
