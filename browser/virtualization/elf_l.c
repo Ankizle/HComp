@@ -6,7 +6,7 @@
 
 unsigned long readcur(void *o, int n, struct ElfLib *lib) {
   fseek(lib->execfile, lib->execfileidx, SEEK_SET);
-  return fread(o, sizeof(char), n, lib->execfile);
+  return fread(o, sizeof(unsigned char), n, lib->execfile);
 }
 
 unsigned long readcurinc(void *o, int n, struct ElfLib *lib) {
@@ -20,7 +20,7 @@ unsigned long readpadcur(int n, struct ElfLib* lib) {
   return 0;
 }
 
-struct ElfLib *read_elf(const char *exepath) {
+struct ElfLib *read_elf(const unsigned char *exepath) {
   struct ElfLib *l = malloc(sizeof(struct ElfLib));
   l->execfilename = exepath;
   l->execfile = fopen(exepath, "rb");
@@ -28,12 +28,15 @@ struct ElfLib *read_elf(const char *exepath) {
 
   l->elf_header = read_elf_header(l);
 
-  l->program_headers = malloc(bytes_conv(l->elf_header.phnum, 2) * sizeof(struct ProgramHeader));
-  for (int i = 0, cur = bytes_conv(l->elf_header.phoff, 8); i < bytes_conv(l->elf_header.phnum, 2); i++, cur+=bytes_conv(l->elf_header.phentsize, 2))
+  l->nprogramheaders = bytes_conv(l->elf_header.phnum, 2);
+  l->nsectionheaders = bytes_conv(l->elf_header.shentnum, 2);
+
+  l->program_headers = malloc(l->nprogramheaders * sizeof(struct ProgramHeader));
+  for (int i = 0, cur = bytes_conv(l->elf_header.phoff, 8); i < l->nprogramheaders; i++, cur+=bytes_conv(l->elf_header.phentsize, 2))
     l->program_headers[i] = read_program_headers(l, cur);
     
-  l->section_headers = malloc(bytes_conv(l->elf_header.shentnum, 2) * sizeof(struct SectionHeader));
-  for (int i = 0, cur = bytes_conv(l->elf_header.shoff, 8); i < bytes_conv(l->elf_header.shentnum, 2); i++, cur+=bytes_conv(l->elf_header.shentsize, 2))
+  l->section_headers = malloc(l->nsectionheaders * sizeof(struct SectionHeader));
+  for (int i = 0, cur = bytes_conv(l->elf_header.shoff, 8); i < l->nsectionheaders; i++, cur+=bytes_conv(l->elf_header.shentsize, 2))
     l->section_headers[i] = read_section_headers(l, cur);
 
   return l;
@@ -43,9 +46,9 @@ struct ElfHeader read_elf_header(struct ElfLib *lib) {
   struct ElfHeader header;
 
   // read the magic numbers 0x00 - 0x04
-  char magic[] = {0x7F, 'E', 'L', 'F'};
+  unsigned char magic[] = {0x7F, 'E', 'L', 'F'};
   while (lib->execfileidx < 4) {
-    char cur;
+    unsigned char cur;
     readcurinc(&cur, 1, lib);
     if (cur != magic[lib->execfileidx])
       ; // error: given binary is not an ELF
@@ -118,6 +121,7 @@ struct ProgramHeader read_program_headers(struct ElfLib *lib, int offset) {
   readcurinc(header.vaddr, datsiz, lib);
   readcurinc(header.paddr, datsiz, lib);
   readcurinc(header.filesz, datsiz, lib);
+  readcurinc(header.memsz, datsiz, lib);
 
   if (datsiz == 4)
     // on x86 the flags are stored here

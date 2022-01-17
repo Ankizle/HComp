@@ -9,11 +9,11 @@ extern "C" {
 #include <stdlib.h>
 
 //convert multiple bytes as digits into one uint64
-__uint64_t bytes_conv(char* v, int n);
+__uint64_t bytes_conv(unsigned char* v, int n);
 
 //most values are pairs of bytes
 //this function converts it to a single uint64
-__uint64_t twobytes_conv(char v[2]);
+__uint64_t twobytes_conv(unsigned char v[2]);
 
 #ifdef __cplusplus
 }

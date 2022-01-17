@@ -11,59 +11,61 @@ struct ElfHeader {
     //see: https://en.wikipedia.org/wiki/Executable_and_Linkable_Format#File_header
 
     //magic number not needed here
-    char bitformat;
-    char endianness;
-    char eiversion;
-    char osabi;
-    char abiver;
-    char exectype[2];
-    char machinetype[2];
-    char version[4];
-    char entry[8];
-    char phoff[8];
-    char shoff[8];
-    char flags[4];
-    char ehsize[2];
-    char phentsize[2];
-    char phnum[2];
-    char shentsize[2];
-    char shentnum[2];
-    char shstrndx[2];
+    unsigned char bitformat;
+    unsigned char endianness;
+    unsigned char eiversion;
+    unsigned char osabi;
+    unsigned char abiver;
+    unsigned char exectype[2];
+    unsigned char machinetype[2];
+    unsigned char version[4];
+    unsigned char entry[8];
+    unsigned char phoff[8];
+    unsigned char shoff[8];
+    unsigned char flags[4];
+    unsigned char ehsize[2];
+    unsigned char phentsize[2];
+    unsigned char phnum[2];
+    unsigned char shentsize[2];
+    unsigned char shentnum[2];
+    unsigned char shstrndx[2];
 };
 
 struct ProgramHeader {
     //see: https://en.wikipedia.org/wiki/Executable_and_Linkable_Format#Program_header
 
-    char type[4];
-    char flags[4];
-    char offset[8];
-    char vaddr[8];
-    char paddr[8];
-    char filesz[8];
-    char memsz[8];
-    char align[8];
+    unsigned char type[4];
+    unsigned char flags[4];
+    unsigned char offset[8];
+    unsigned char vaddr[8];
+    unsigned char paddr[8];
+    unsigned char filesz[8];
+    unsigned char memsz[8];
+    unsigned char align[8];
 };
 
 struct SectionHeader {
     //see: https://en.wikipedia.org/wiki/Executable_and_Linkable_Format#Section_header
 
-    char shname[4];
-    char shtype[4];
-    char shflags[8];
-    char shaddr[8];
-    char shoffset[8];
-    char shsize[8];
-    char shlink[4];
-    char shinfo[4];
-    char shaddralign[8];
-    char shentsize[8];
+    unsigned char shname[4];
+    unsigned char shtype[4];
+    unsigned char shflags[8];
+    unsigned char shaddr[8];
+    unsigned char shoffset[8];
+    unsigned char shsize[8];
+    unsigned char shlink[4];
+    unsigned char shinfo[4];
+    unsigned char shaddralign[8];
+    unsigned char shentsize[8];
 };
 
 struct ElfLib {
 
     FILE* execfile;
-    const char* execfilename;
+    const unsigned char* execfilename;
     int execfileidx;
+
+    int nprogramheaders, nsectionheaders;
 
     struct ElfHeader elf_header;
     struct ProgramHeader* program_headers;
@@ -78,7 +80,7 @@ struct ElfHeader read_elf_header(struct ElfLib* lib);
 struct ProgramHeader read_program_headers(struct ElfLib* lib, int offset);
 struct SectionHeader read_section_headers(struct ElfLib* lib, int offset);
 
-struct ElfLib* read_elf(const char* exepath);
+struct ElfLib* read_elf(const unsigned char* exepath);
 void clean_elf(struct ElfLib* lib);
 
 #ifdef __cplusplus

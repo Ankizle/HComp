@@ -4,24 +4,38 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdint.h>
 #include "elf_l.h"
 #include "util.h"
+#include "executor/app.h"
+#include "executor/load_elf.h"
+#include "executor/exec_elf.h"
 
-const __uint64_t DEFAULT_MEM_SIZ = 0xffffffff;
+const __uint64_t DEFAULT_MEM_SIZ = 0xffffff;
 
-int RunApp(char* exepath) {
+int RunApp(unsigned char* exepath) {
     struct ElfLib* l = read_elf(exepath);
 
     __uint64_t
         entry_addr = twobytes_conv(l->elf_header.entry),
         mem_siz = DEFAULT_MEM_SIZ;
 
-    printf("%lx\n", bytes_conv(l->section_headers[1].shsize, 8));
+    unsigned char* ptr = mmap(0, mem_siz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
 
-    void* alc = mmap((void*)entry_addr, mem_siz, PROT_READ, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
-    munmap(alc, mem_siz);
+    struct App* app = malloc(sizeof(struct App));
+    app->lib = l;
+    app->mem_start = ptr;
+    app->mem_end = ptr + mem_siz;
+
+    load_elf(app);
+    exec_elf(app);
+
+    //clean up the memory
+    munmap(ptr, mem_siz);
+    clean_elf(l);
+    free(app);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, unsigned char** argv) {
     RunApp("../test/a.out");
 }

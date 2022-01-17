@@ -1,6 +1,6 @@
 O_FLAGS = -c -fPIC
 SHARED_FLAGS = -shared
-OBJS = mem.o elf_l.o util.o
+OBJS = mem.o elf_l.o util.o executor/load_elf.o executor/exec_elf.o
 PROJ_NAME = virtualizer
 
 .PHONY: all
@@ -12,13 +12,19 @@ virtualizer: $(OBJS)
 	$(CC) $(OBJS) run.c -o $(PROJ_NAME).bin
 
 mem.o: mem.c
-	$(CC) $(O_FLAGS) $<
+	$(CC) $(O_FLAGS) $< -o $@
 
 elf_l.o: elf_l.c
-	$(CC) $(O_FLAGS) $<
+	$(CC) $(O_FLAGS) $< -o $@
 
 util.o: util.c
-	$(CC) $(O_FLAGS) $<
+	$(CC) $(O_FLAGS) $< -o $@
+
+executor/load_elf.o: executor/load_elf.c
+	$(CC) $(O_FLAGS) $< -o $@
+
+executor/exec_elf.o: executor/exec_elf.c
+	$(CC) $(O_FLAGS) $< -o $@
 
 .PHONY: clean
 clean:
