@@ -2,22 +2,22 @@
 #include <string.h>
 #include <stdio.h>
 #include "load_elf.h"
-#include "app.h"
+#include "../app.h"
 #include "segment.h"
-#include "../util.h"
-#include "../elf_l.h"
+#include "../../util.h"
+#include "../../elf_l.h"
 
 void load_elf(struct App* app) {
 
-    app->segments = malloc(sizeof(struct Segment) * app->lib->nprogramheaders);
+    app->segments = malloc(sizeof(struct CPU_Segment) * app->lib->nprogramheaders);
     for (int i = 0; i < app->lib->nprogramheaders; i++) {
-        struct Segment s;
+        struct CPU_Segment s;
 
         int start = bytes_conv(app->lib->program_headers[i].vaddr, 8);
         s.start = (app->mem_start) + start;
 
         int flags = bytes_conv(app->lib->program_headers[i].flags, 4);
-        struct SegmentFlags flags_struct;
+        struct CPU_SegmentFlags flags_struct;
         //regarding flags, they have 3 bits we care about
         //lsb + 0 is if it is executable or not
         //lsb + 1 is if it is writeable or not

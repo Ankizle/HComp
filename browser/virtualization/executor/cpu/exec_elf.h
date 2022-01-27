@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "app.h"
+#include "../app.h"
 
 void exec_elf(struct App* app);
 

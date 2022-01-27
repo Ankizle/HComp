@@ -13,7 +13,7 @@ def hcomp_bench():
         exit_code = process.wait()
 
         outstr = out.decode("utf-8")
-        dat[f] = float(outstr)
-        print(outstr, end="")
+        dat[f] = float(outstr) * 1000
+        print(dat[f], end=" ms\n")
 
     return dat

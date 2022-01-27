@@ -20,7 +20,7 @@ unsigned long readpadcur(int n, struct ElfLib* lib) {
   return 0;
 }
 
-struct ElfLib *read_elf(const unsigned char *exepath) {
+struct ElfLib *read_elf(const char *exepath) {
   struct ElfLib *l = malloc(sizeof(struct ElfLib));
   l->execfilename = exepath;
   l->execfile = fopen(exepath, "rb");

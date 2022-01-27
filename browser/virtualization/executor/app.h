@@ -7,8 +7,8 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include "registers.h"
-#include "segment.h"
+#include "./cpu/registers.h"
+#include "./cpu/segment.h"
 #include "../elf_l.h"
 
 struct App {
@@ -22,8 +22,8 @@ struct App {
     unsigned char* mem_end;
    //higher memory addresses
 
-   struct Registers registers;
-   struct Segment* segments;
+   struct CPU_Registers registers;
+   struct CPU_Segment* segments;
 };
 
 #ifdef __cplusplus

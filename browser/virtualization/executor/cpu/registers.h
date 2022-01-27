@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 //store the registers a program uses
-struct Registers {
+struct CPU_Registers {
     long long rax;
     long long rbx;
     long long rcx;

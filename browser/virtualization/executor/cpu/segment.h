@@ -8,14 +8,14 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-struct SegmentFlags {
+struct CPU_SegmentFlags {
     bool execute, write, read;
 };
 
 //represent a memory segment
-struct Segment {
+struct CPU_Segment {
     unsigned char* start;
-    struct SegmentFlags flags;
+    struct CPU_SegmentFlags flags;
     int align;
     unsigned long long memsz;
 };

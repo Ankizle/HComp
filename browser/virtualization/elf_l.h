@@ -80,7 +80,7 @@ struct ElfHeader read_elf_header(struct ElfLib* lib);
 struct ProgramHeader read_program_headers(struct ElfLib* lib, int offset);
 struct SectionHeader read_section_headers(struct ElfLib* lib, int offset);
 
-struct ElfLib* read_elf(const unsigned char* exepath);
+struct ElfLib* read_elf(const char* exepath);
 void clean_elf(struct ElfLib* lib);
 
 #ifdef __cplusplus

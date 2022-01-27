@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "app.h"
+#include "../app.h"
 
 //load an elf binary into virtual memory allocated in an App structure
 void load_elf(struct App* app);

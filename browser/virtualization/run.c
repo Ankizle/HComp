@@ -8,8 +8,8 @@
 #include "elf_l.h"
 #include "util.h"
 #include "executor/app.h"
-#include "executor/load_elf.h"
-#include "executor/exec_elf.h"
+#include "executor/cpu/load_elf.h"
+#include "executor/cpu/exec_elf.h"
 
 const __uint64_t DEFAULT_MEM_SIZ = 0xffffff;
 
@@ -37,5 +37,5 @@ int RunApp(unsigned char* exepath) {
 }
 
 int main(int argc, unsigned char** argv) {
-    RunApp("../test/a.out");
+    RunApp(argv[1]);
 }
