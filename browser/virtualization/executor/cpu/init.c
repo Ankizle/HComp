@@ -3,7 +3,7 @@
 
 void initregisters(struct App* app) {
     app->registers.rax = malloc(sizeof(long long));
-    *app->registers.rax = 0;
+    *app->registers.rax = 1 << 16 - 1;
     
     app->registers.rbx = malloc(sizeof(long long));
     *app->registers.rbx = 0;

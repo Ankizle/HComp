@@ -36,15 +36,7 @@ void interpretModRM(struct ModRM* m, struct App* app, unsigned char prefix) {
 
     if (m->mod != 0b11) {
         //rm is a memory location
-        int disp = 0;
-        switch (m->mod) {
-            case 0b01:
-                disp = 2;
-                break;
-            case 0b10:
-                disp = 4;
-                break;
-        }
+        int disp = m->mod * 2;
 
         if (m->rm = 0b100) {
             char sib_byte = app->mem_start[++app->registers.rip];
@@ -56,10 +48,13 @@ void interpretModRM(struct ModRM* m, struct App* app, unsigned char prefix) {
             if (base == 0)
                 base = (long long*) ((app->mem_start) + next(app, 4));
             m->offset = base;
-        }
+        } else
+            if (m->mod == 0b00 && m->rm == 0b101) m->offset = (long long*) next(app, 4);
+            else m->offset = getregister(prefix, app, m->rm, 3, m->mod) + next(app, disp);
+    } else {
+        //we are using two registers
+        m->offset = getregister(prefix, app, m->rm, 3, m->mod);
     }
 
-    m->regval = getregister(prefix, app, m->reg, 3, m->mod);
-
-    //we are using two registers
+    m->regval = getregister(prefix, app, m->rm, 3, m->mod);
 }
