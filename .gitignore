@@ -1,5 +1,6 @@
 __pycache__/
 *.bin
+!*.bin/
 *.o
 *.out
 build/
