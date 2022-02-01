@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 import openpyxl as xl
+import scipy.stats as sp
 
 N_TRIALS = 30
 
@@ -64,7 +65,6 @@ def main():
         for d in range(len(vals_native)):
             ws["A{}".format(d + 2)] = vals_native[d]
 
-
         for d in range(len(vals_hcomp)):
             ws["C{}".format(d + 2)] = vals_hcomp[d]
 
@@ -79,6 +79,12 @@ def main():
         ws["I2"] = "=STDEV(A2:A{})".format(len(vals_native) + 1)
         ws["H3"] = "HComp:"
         ws["I3"] = "=STDEV(C2:C{})".format(len(vals_native) + 1)
+
+        dof = N_TRIALS - 1
+        t_test = sp.ttest_ind(vals_native, vals_hcomp)
+        pval = (1.0 - sp.t.cdf(abs(t_test.statistic), dof)) * 2.0
+        ws["E5"] = "P-Value:"
+        ws["F5"] = pval
 
         wb.save("{}dat.xlsx".format(outpath))
 

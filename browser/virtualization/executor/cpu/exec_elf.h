@@ -7,7 +7,8 @@ extern "C" {
 
 #include "../app.h"
 
-void exec_elf(struct App* app);
+void exec_elf(struct App*);
+long long next(struct App*, int);
 
 #ifdef __cplusplus
 }
