@@ -1,41 +1,55 @@
-#include <bits/types.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <sys/mman.h>
-#include <unistd.h>
 #include <string.h>
-#include <stdint.h>
+#include <elf.h>
+#include <stdlib.h>
+#include <dlfcn.h>
 #include "elf_l.h"
-#include "util.h"
-#include "executor/app.h"
-#include "executor/cpu/load_elf.h"
-#include "executor/cpu/exec_elf.h"
+#include "app.h"
+#define DEFAULT_MEM_SIZ 0xffffffff
 
-const __uint64_t DEFAULT_MEM_SIZ = 0xffffff;
+int main(int argc, char** argv)
+{
+    struct ElfLib lib = read_elf(argv[1]);
+    struct App app;
+    app.lib = lib;
 
-int RunApp(unsigned char* exepath) {
-    struct ElfLib* l = read_elf(exepath);
+    unsigned char* exec = mmap(NULL, DEFAULT_MEM_SIZ, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    memset(exec, 0, DEFAULT_MEM_SIZ);
 
-    __uint64_t
-        entry_addr = twobytes_conv(l->elf_header.entry),
-        mem_siz = DEFAULT_MEM_SIZ;
+    for (int i = 0; i < lib.elf_header.e_phnum; i++) {
+        Elf64_Phdr phdr = lib.program_headers[i];
 
-    unsigned char* ptr = mmap(0, mem_siz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+        fseek(lib.execfile, phdr.p_offset, SEEK_SET);
+        switch (phdr.p_type) {
+            case PT_LOAD: {
+                fread(exec + phdr.p_vaddr, sizeof(unsigned char), phdr.p_memsz, lib.execfile);
+                break;
+            }
+            case PT_DYNAMIC: {
+                break;
+            }
+            case PT_INTERP: {
+                char* interp = calloc(sizeof(char), phdr.p_memsz + 1);
+                fread(interp, sizeof(char), phdr.p_memsz, lib.execfile);
+                break;
+            }
+            case PT_PHDR: {
+                break;
+            }
+        }
 
-    struct App* app = malloc(sizeof(struct App));
-    app->lib = l;
-    app->mem_start = ptr;
-    app->mem_end = ptr + mem_siz;
+        int flags = PROT_NONE;
 
-    load_elf(app);
-    exec_elf(app);
+        #define HASFLAG(flag) if (phdr.p_flags & flag) flags|=flag
 
-    //clean up the memory
-    munmap(ptr, mem_siz);
-    clean_elf(l);
-    free(app);
-}
+        HASFLAG(PROT_EXEC); //execute flag on
+        HASFLAG(PROT_WRITE); //write flag on
+        HASFLAG(PROT_READ); //read flag on
+        
+        mprotect(exec + phdr.p_vaddr, phdr.p_memsz, flags);
+    }
 
-int main(int argc, unsigned char** argv) {
-    RunApp(argv[1]);
+    // void (*v)() = (void*)(exec + lib.elf_header.e_entry);
+    // v();
 }
