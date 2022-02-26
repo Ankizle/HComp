@@ -17,6 +17,7 @@ struct ElfLib {
     Elf64_Shdr* section_headers;
 };
 
+struct ElfLib read_elf_file(FILE* file);
 struct ElfLib read_elf(const char* exepath);
 void clean_elf(struct ElfLib* lib);
 

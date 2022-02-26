@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-struct ElfLib read_elf(const char *exepath) {
+struct ElfLib read_elf_file(FILE* file) {
   struct ElfLib l;
-  l.execfile = fopen(exepath, "rb");
+  l.execfile = file;
 
   Elf64_Ehdr ehdr;
   fread(&ehdr, sizeof(Elf64_Ehdr), 1, l.execfile);
@@ -17,7 +17,11 @@ struct ElfLib read_elf(const char *exepath) {
 
   l.section_headers = malloc(sizeof(Elf64_Shdr) * ehdr.e_shnum);
   fseek(l.execfile, ehdr.e_shoff, SEEK_SET);
-  fread(l.section_headers, sizeof(Elf64_Phdr), ehdr.e_shnum, l.execfile);
+  fread(l.section_headers, sizeof(Elf64_Shdr), ehdr.e_shnum, l.execfile);
 
   return l;
+}
+
+struct ElfLib read_elf(const char *exepath) {
+  return read_elf_file(fopen(exepath, "rb"));
 }
