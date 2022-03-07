@@ -30,6 +30,15 @@ def main():
     print("------------------")
     print()
 
+    tot_wasm_data = []
+
+    for i in range(0, N_TRIALS):
+        print("WASM BENCHMARK ${}:".format(i + 1))
+        tot_wasm_data.append(wasm_bench())
+        print()
+    print("------------------")
+    print()
+
     #start plotting
     if not os.path.isdir("./dat"):
         os.mkdir("./dat/") #folder to store the dat
@@ -39,8 +48,10 @@ def main():
 
         avg_native = 0
         avg_hcomp = 0
+        avg_wasm = 0
         vals_native = []
         vals_hcomp = []
+        vals_wasm = []
 
         for m in tot_native_data:
             avg_native+=m[b]
@@ -48,6 +59,9 @@ def main():
         for m in tot_hcomp_data:
             avg_hcomp+=m[b]
             vals_hcomp.append(m[b])
+        for m in tot_wasm_data:
+            avg_wasm+=m[b]
+            vals_wasm.append(m[b])
 
         outpath = "./dat/{}/".format(b)
 
@@ -61,6 +75,7 @@ def main():
 
         ws["A1"] = "Native"
         ws["C1"] = "HComp"
+        ws["E1"] = "WASM"
 
         for d in range(len(vals_native)):
             ws["A{}".format(d + 2)] = vals_native[d]
@@ -68,38 +83,43 @@ def main():
         for d in range(len(vals_hcomp)):
             ws["C{}".format(d + 2)] = vals_hcomp[d]
 
-        ws["E1"] = "Averages:"
-        ws["E2"] = "Native:"
-        ws["F2"] = "=AVERAGE(A2:A{})".format(len(vals_native) + 1)
-        ws["E3"] = "HComp:"
-        ws["F3"] = "=AVERAGE(C2:B{})".format(len(vals_native) + 1)
+        for d in range(len(vals_wasm)):
+            ws["E{}".format(d + 2)] = vals_wasm[d]
 
-        ws["H1"] = "Standard Deviations:"
-        ws["H2"] = "Native:"
-        ws["I2"] = "=STDEV(A2:A{})".format(len(vals_native) + 1)
-        ws["H3"] = "HComp:"
-        ws["I3"] = "=STDEV(C2:C{})".format(len(vals_native) + 1)
+        ws["G1"] = "Averages:"
+        ws["G2"] = "Native:"
+        ws["H2"] = "=AVERAGE(A2:A{})".format(len(vals_native) + 1)
+        ws["G3"] = "HComp:"
+        ws["H3"] = "=AVERAGE(C2:B{})".format(len(vals_native) + 1)
+
+        ws["I1"] = "Standard Deviations:"
+        ws["I2"] = "Native:"
+        ws["J2"] = "=STDEV(A2:A{})".format(len(vals_native) + 1)
+        ws["I3"] = "HComp:"
+        ws["J3"] = "=STDEV(C2:C{})".format(len(vals_native) + 1)
 
         dof = N_TRIALS - 1
         t_test = sp.ttest_ind(vals_native, vals_hcomp)
         pval = (1.0 - sp.t.cdf(abs(t_test.statistic), dof)) * 2.0
-        ws["E5"] = "P-Value:"
-        ws["F5"] = pval
+        ws["G5"] = "P-Value:"
+        ws["H5"] = pval
 
         wb.save("{}dat.xlsx".format(outpath))
 
         avg_native/=len(tot_native_data)
         avg_hcomp/=len(tot_hcomp_data)
+        avg_wasm/=len(tot_wasm_data)
 
         native_stdev = np.std(np.array(vals_native))
         hcomp_stdev = np.std(np.array(vals_hcomp))
+        wasm_stdev = np.std(np.array(vals_wasm))
 
         plt.figure(0)
 
         plt.figure(0)
-        plt.bar(range(0, 2), [avg_native, avg_hcomp], color=["blue", "orange"], yerr=[native_stdev, hcomp_stdev])
+        plt.bar(range(0, 2), [avg_native, avg_hcomp, avg_wasm], color=["blue", "orange", "green"], yerr=[native_stdev, hcomp_stdev, wasm_stdev])
         
-        plt.xticks(range(0, 2), ["Native", "HComp"])
+        plt.xticks(range(0, 2), ["Native", "HComp", "WASM"])
         plt.ylabel("Execution speed in milliseconds")
         plt.title("Benchmarks")
         plt.savefig("{}graph.png".format(outpath))

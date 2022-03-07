@@ -2,6 +2,9 @@ __pycache__/
 *.bin
 !*.bin/
 *.o
+*.a
+*.so
+*.bin
 *.out
 build/
 .vscode

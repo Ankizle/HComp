@@ -1,47 +1,109 @@
-#include <GL/glew.h> // include GLEW and new version of GL
-#include <GLFW/glfw3.h> // GLFW helper library
-#include <stdio.h>
+#include<iostream>
+#include<stdlib.h>
+#include <unistd.h>
 
-int main() {
-  // start GL context and O/S window using the GLFW helper library
-  if (!glfwInit()) {
-    fprintf(stderr, "ERROR: could not start GLFW3\n");
-    return 1;
-  } 
+#ifdef __APPLE__
+#include<openGL/openGL.h>
+#include<GLUT/glut.h>
+#else 
+#include <X11/Xlib.h>
+#include<GL/glut.h>
+#endif
 
-  // uncomment these lines if on Apple OS X
-  /*glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);*/
+using namespace std;
+void keyPress(unsigned char key,int x,int y)
+{
 
-  GLFWwindow* window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-  if (!window) {
-    fprintf(stderr, "ERROR: could not open window with GLFW3\n");
-    glfwTerminate();
-    return 1;
-  }
-  glfwMakeContextCurrent(window);
-                                  
-  // start GLEW extension handler
-  glewExperimental = GL_TRUE;
-  glewInit();
+    switch(key)
+    {
+       case 27:
+            exit(0);     
+    }
+}
 
-  // get version info
-  const GLubyte* renderer = glGetString(GL_RENDERER); // get renderer string
-  const GLubyte* version = glGetString(GL_VERSION); // version as a string
-  printf("Renderer: %s\n", renderer);
-  printf("OpenGL version supported %s\n", version);
+void initRendering()
+{
+    glEnable(GL_DEPTH_TEST);
+}
 
-  // tell GL to only draw onto a pixel if the shape is closer to the viewer
-  glEnable(GL_DEPTH_TEST); // enable depth-testing
-  glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
 
-  /* OTHER STUFF GOES HERE NEXT */
+//Called when the window is resized
+void handleResize(int w, int h) {
+    //Tell OpenGL how to convert from coordinates to pixel values
+    glViewport(0, 0, w, h);
+    
+    glMatrixMode(GL_PROJECTION); //Switch to setting the camera perspective
+    
+    //Set the camera perspective
+    glLoadIdentity(); //Reset the camera
+    gluPerspective(45.0,                  //The camera angle
+                   (double)w / (double)h, //The width-to-height ratio
+                   1.0,                   //The near z clipping coordinate
+                   200.0);                //The far z clipping coordinate
+}
 
-  for (;;) {}
-  
-  // close GL context and any other GLFW resources
-  glfwTerminate();
-  return 0;
+
+
+float _angle = 30.0f;
+float _cameraAngle = 0.0f;
+
+void drawScene()
+{
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+   
+    glMatrixMode(GL_MODELVIEW);
+   
+    glLoadIdentity();
+
+    glPushMatrix(); //Save the transformations performed thus far
+
+    glRotatef(_angle, -1.5f, 0.5f, -5.0f); //Rotate about the z-axis
+
+    glBegin(GL_TRIANGLES);
+   
+        glVertex3f(-0.5f, 0.5f, -5.0f);
+        glVertex3f(-1.0f, 1.5f, -5.0f);
+        glVertex3f(-1.5f, 0.5f, -5.0f);
+
+    glEnd();
+    glPopMatrix(); //Undo the move to the center of the triangle
+
+    glutSwapBuffers();
+}
+
+void update(int value) {
+    _angle += 2.0f;
+    if (_angle > 360) {
+        _angle -= 360;
+    }
+   
+    glutPostRedisplay(); //Tell GLUT that the display has changed
+   
+    //Tell GLUT to call update again in 25 milliseconds
+    glutTimerFunc(25, update, 0);
+}
+
+int main(int argc,char** argv)
+{
+    glutInit(&argc,argv);
+   
+    glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB|GLUT_DEPTH);
+   
+    glutInitWindowSize(400,400);
+   
+    glutCreateWindow("My Triangle");
+   
+    initRendering();
+   
+    glutDisplayFunc(drawScene);
+   
+    glutKeyboardFunc(keyPress);
+
+    glutReshapeFunc(handleResize);
+   
+    glutTimerFunc(25, update, 0); //Add a timer
+
+    glutMainLoop();
+   
+    return(0);
 }

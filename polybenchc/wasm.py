@@ -2,13 +2,12 @@ import os
 import subprocess
 from getbenchmarks import *
 
-def hcomp_bench():
+def wasm_bench():
     dat = {}
 
     for f in getbenchmarks():
         print("{} runtime: ".format(f), end="", flush=True)
-        
-        process = subprocess.Popen(["../browser/browser.bin", "./build/{}".format(f)], stdout=subprocess.PIPE)
+        process = subprocess.Popen(["./build/{}".format(f)], stdout=subprocess.PIPE)
         (out, e) = process.communicate()
         exit_code = process.wait()
 
