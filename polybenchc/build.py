@@ -32,5 +32,15 @@ def build():
                         )
                     )
 
+                    #do the same for wasm
+                    os.system(
+                        "emcc -O3 -I utilities -I {} utilities/polybench.c {} -DPOLYBENCH_TIME -o {} -lm -s ALLOW_MEMORY_GROWTH=1"
+                        .format(
+                            path, #path to directory of benchmark
+                            path + "/" + f, #path to main file of benchmark
+                            "./build/{}".format(f.split(".")[0] + ".js"), #path to output build to
+                        )
+                    )
+
 def clean():
     os.system("rm -r ./build")
