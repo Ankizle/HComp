@@ -7,7 +7,7 @@
 #include<GLUT/glut.h>
 #else 
 #include <X11/Xlib.h>
-#include<GL/glut.h>
+#include <GL/glut.h>
 #endif
 
 using namespace std;

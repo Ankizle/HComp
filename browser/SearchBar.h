@@ -23,7 +23,11 @@ class SearchBar : public QLineEdit {
 
         void keyPressEvent(QKeyEvent* e) override {
             if (e->key() == Qt::Key_Return) {
-                unsigned long long w = tab1open(parentw->winId());
+
+                char* c = (char*)calloc(1000, sizeof(char));
+                sprintf(c, "Xephyr :1 -ac -screen 1024 -br -reset -parent %d -verbosity 10000", parentw->winId());
+                
+                system(c);
             } else if (e->key() == Qt::Key_Backspace) this->backspace();
             else this->setText(this->text() + e->text());
         }
