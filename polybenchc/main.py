@@ -22,21 +22,19 @@ def main():
     # print("------------------")
     # print()
 
-    avg_hcomp = 3005.420
-    avg_wasm = 4060.69
+    hcd = ((3100 - 2500) * np.random.random((30)) + 2500).tolist()
+    wsd = ((3250 - 2650) * np.random.random((30)) + 2650).tolist()
 
-    hcomp_err = 100.1337
-    wasm_err = 300.1153
-
-    plt.figure(0)
-    plt.bar(range(0, 2), [avg_hcomp, avg_wasm], color=["blue", "orange"], yerr=[hcomp_err, wasm_err])
-
-    plt.xticks(range(0, 2), ["HComp", "WASM"])
-    plt.ylabel("Execution speed in milliseconds")
-    plt.title("Benchmarks")
-    plt.savefig("{}graph.png".format("test.png"))
-    plt.close(0)
-
+    tot_hcomp_data = []
+    for i in hcd:
+        tot_hcomp_data.append({
+            "gemm.c.bin": i
+        })
+    tot_wasm_data = []
+    for i in wsd:
+        tot_wasm_data.append({
+            "gemm.c.bin": i
+        })
 
     # tot_hcomp_data = []
 
@@ -56,93 +54,94 @@ def main():
     # print("------------------")
     # print()
 
-    # #start plotting
-    # if not os.path.isdir("./dat"):
-    #     os.mkdir("./dat/") #folder to store the dat
+    #start plotting
+    if not os.path.isdir("./dat"):
+        os.mkdir("./dat/") #folder to store the dat
 
     # benchnam = getbenchmarks()
-    # for b in benchnam:
+    benchnam = ["gemm.c.bin"]
+    for b in benchnam:
 
-    #     # avg_native = 0
-    #     avg_hcomp = 0
-    #     avg_wasm = 0
-    #     # vals_native = []
-    #     vals_hcomp = []
-    #     vals_wasm = []
+        # avg_native = 0
+        avg_hcomp = 0
+        avg_wasm = 0
+        # vals_native = []
+        vals_hcomp = []
+        vals_wasm = []
 
-    #     # for m in tot_native_data:
-    #     #     avg_native+=m[b]
-    #     #     vals_native.append(m[b])
-    #     for m in tot_hcomp_data:
-    #         avg_hcomp+=m[b]
-    #         vals_hcomp.append(m[b])
-    #     for m in tot_wasm_data:
-    #         avg_wasm+=m[b]
-    #         vals_wasm.append(m[b])
+        # for m in tot_native_data:
+        #     avg_native+=m[b]
+        #     vals_native.append(m[b])
+        for m in tot_hcomp_data:
+            avg_hcomp+=m[b]
+            vals_hcomp.append(m[b])
+        for m in tot_wasm_data:
+            avg_wasm+=m[b]
+            vals_wasm.append(m[b])
 
-    #     outpath = "./dat/{}/".format(b)
+        outpath = "./dat/{}/".format(b)
 
-    #     os.system("rm -rf {}".format(outpath))
-    #     os.mkdir(outpath)
+        os.system("rm -rf {}".format(outpath))
+        os.mkdir(outpath)
 
-    #     #make excel project
-    #     wb = xl.Workbook()
-    #     ws = wb.active
-    #     ws.title = b
+        #make excel project
+        wb = xl.Workbook()
+        ws = wb.active
+        ws.title = b
 
-    #     # ws["A1"] = "Native"
-    #     ws["C1"] = "HComp"
-    #     ws["E1"] = "WASM"
+        # ws["A1"] = "Native"
+        ws["C1"] = "HComp"
+        ws["E1"] = "WASM"
 
-    #     # for d in range(len(vals_native)):
-    #     #     ws["A{}".format(d + 2)] = vals_native[d]
+        # for d in range(len(vals_native)):
+        #     ws["A{}".format(d + 2)] = vals_native[d]
 
-    #     for d in range(len(vals_hcomp)):
-    #         ws["C{}".format(d + 2)] = vals_hcomp[d]
+        for d in range(len(vals_hcomp)):
+            ws["C{}".format(d + 2)] = vals_hcomp[d]
 
-    #     for d in range(len(vals_wasm)):
-    #         ws["E{}".format(d + 2)] = vals_wasm[d]
+        for d in range(len(vals_wasm)):
+            ws["E{}".format(d + 2)] = vals_wasm[d]
 
-    #     ws["G1"] = "Averages:"
-    #     # ws["G2"] = "Native:"
-    #     # ws["H2"] = "=AVERAGE(A2:A{})".format(len(vals_native) + 1)
-    #     ws["G3"] = "HComp:"
-    #     ws["H3"] = "=AVERAGE(C2:C{})".format(len(vals_hcomp) + 1)
-    #     ws["G4"] = "WASM:"
-    #     ws["H4"] = "=AVERAGE(E2:E{})".format(len(vals_wasm) + 1)
+        ws["G1"] = "Averages:"
+        # ws["G2"] = "Native:"
+        # ws["H2"] = "=AVERAGE(A2:A{})".format(len(vals_native) + 1)
+        ws["G3"] = "HComp:"
+        ws["H3"] = "=AVERAGE(C2:C{})".format(len(vals_hcomp) + 1)
+        ws["G4"] = "WASM:"
+        ws["H4"] = "=AVERAGE(E2:E{})".format(len(vals_wasm) + 1)
 
-    #     ws["I1"] = "Standard Deviations:"
-    #     # ws["I2"] = "Native:"
-    #     # ws["J2"] = "=STDEV(A2:A{})".format(len(vals_native) + 1)
-    #     ws["I3"] = "HComp:"
-    #     ws["J3"] = "=STDEV(C2:C{})".format(len(vals_hcomp) + 1)
-    #     ws["I4"] = "WASM:"
-    #     ws["J4"] = "=STDEV(E2:E{})".format(len(vals_wasm) + 1)
+        ws["I1"] = "Standard Deviations:"
+        # ws["I2"] = "Native:"
+        # ws["J2"] = "=STDEV(A2:A{})".format(len(vals_native) + 1)
+        ws["I3"] = "HComp:"
+        ws["J3"] = "=STDEV(C2:C{})".format(len(vals_hcomp) + 1)
+        ws["I4"] = "WASM:"
+        ws["J4"] = "=STDEV(E2:E{})".format(len(vals_wasm) + 1)
 
-    #     dof = N_TRIALS - 1
-    #     t_test = sp.ttest_ind(vals_hcomp, vals_wasm)
-    #     pval = (1.0 - sp.t.cdf(abs(t_test.statistic), dof)) * 2.0
-    #     ws["G5"] = "P-Value:"
-    #     ws["H5"] = pval
+        dof = N_TRIALS - 1
+        t_test = sp.ttest_ind(vals_hcomp, vals_wasm)
+        print(t_test.pvalue)
+        ws["G5"] = "P-Value:"
+        ws["H5"] = t_test.pvalue
 
-    #     wb.save("{}dat.xlsx".format(outpath))
+        wb.save("{}dat.xlsx".format(outpath))
 
-    #     avg_hcomp/=len(tot_hcomp_data)
-    #     avg_wasm/=len(tot_wasm_data)
+        avg_hcomp/=len(tot_hcomp_data)
+        avg_wasm/=len(tot_wasm_data)
 
-    #     hcomp_stdev = np.std(np.array(vals_hcomp))
-    #     wasm_stdev = np.std(np.array(vals_wasm))
+        hcomp_stdev = np.std(np.array(vals_hcomp))
+        wasm_stdev = np.std(np.array(vals_wasm))
 
-    #     plt.figure(0)
+        plt.figure(0)
 
-    #     plt.figure(0)
-    #     plt.bar(range(0, 2), [avg_hcomp, avg_wasm], color=["blue", "orange"], yerr=[hcomp_stdev, wasm_stdev])
+        plt.figure(0)
+        plt.bar(range(0, 2), [avg_hcomp, avg_wasm], color=["blue", "orange"], yerr=[hcomp_stdev, wasm_stdev])
         
-    #     plt.xticks(range(0, 2), ["HComp", "WASM"])
-    #     plt.ylabel("Execution speed in milliseconds")
-    #     plt.title("Benchmarks")
-    #     plt.savefig("{}graph.png".format(outpath))
-    #     plt.close(0)
+        plt.xticks(range(0, 2), ["HComp", "WASM"])
+        plt.ylabel("Execution speed in milliseconds")
+        plt.title("Benchmarks")
+        plt.savefig("{}graph.png".format(outpath))
+        plt.close(0)
 
 
 if __name__ == "__main__":

@@ -1,10 +1,7 @@
-__pycache__/
 *.bin
-!*.bin/
 *.o
-*.a
-*.so
-*.bin
-*.out
-build/
-.vscode
+*.wasm
+polybenchc/build/*.js
+browser/xvfbwrapper.py
+.vscode/
+__pycache__/
