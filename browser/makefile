@@ -2,7 +2,7 @@ CC = gcc
 CXX = g++
 
 OPS = -fPIC
-OBJS = hcompx.o
+OBJS = hcompx.o xvfbwrapper.o
 
 OUTFILE = browser.bin
 
@@ -11,11 +11,11 @@ GDK = $(shell pkg-config --cflags --libs gtk4-x11)
 X11 = -lX11
 LINK = $(GTK) $(GDK) $(X11)
 
-all: $(OBJS) xvfbwrapper.py
+all: $(OBJS)
 	$(CXX) $(LINK) $(OPS) $(OBJS) browser.cc -o $(OUTFILE)
 
 hcompx.o: hcompx.c
 	$(CC) -c $(X11) $< -o $@
 
-xvfbwrapper.py:
-	wget https://raw.githubusercontent.com/cgoldberg/xvfbwrapper/master/xvfbwrapper.py
+xvfbwrapper.o: xvfbwrapper.c
+	$(CC) -c $< -o $@

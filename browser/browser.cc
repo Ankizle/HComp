@@ -1,6 +1,7 @@
+#include <iostream>
+
 #include <gtk/gtk.h>
 #include <gdk/x11/gdkx.h>
-#include <iostream>
 
 #include <X11/Xlib.h>
 
