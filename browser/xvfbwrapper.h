@@ -8,13 +8,12 @@ extern "C" {
 #include <X11/Xlib.h>
 
 struct Xvfb {
-    int width, height, colordepth;
-    Display* output
+    Display* output;
 };
 
-struct Xvfb initvfb(int, int, int);
+struct Xvfb initvfb();
 struct Xvfb initvfbDefault();
-void startvfb(struct Xvfb);
+void startvfb(struct Xvfb*);
 
 #ifdef __cplusplus
 }

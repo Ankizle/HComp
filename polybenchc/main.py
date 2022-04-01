@@ -11,48 +11,34 @@ import scipy.stats as sp
 N_TRIALS = 30
 
 def main():
-    # build()
+    build()
 
-    # tot_native_data = []
+    tot_native_data = []
 
-    # for i in range(0, N_TRIALS):
-    #     print("NATIVE BENCHMARK #{}:".format(i + 1))
-    #     tot_native_data.append(native_bench())
-    #     print()
-    # print("------------------")
-    # print()
-
-    hcd = ((3100 - 2500) * np.random.random((30)) + 2500).tolist()
-    wsd = ((3250 - 2650) * np.random.random((30)) + 2650).tolist()
+    for i in range(0, N_TRIALS):
+        print("NATIVE BENCHMARK #{}:".format(i + 1))
+        tot_native_data.append(native_bench())
+        print()
+    print("------------------")
+    print()
 
     tot_hcomp_data = []
-    for i in hcd:
-        tot_hcomp_data.append({
-            "gemm.c.bin": i
-        })
+
+    for i in range(0, N_TRIALS):
+        print("HCOMP BENCHMARK #{}:".format(i + 1))
+        tot_hcomp_data.append(hcomp_bench())
+        print()
+    print("------------------")
+    print()
+
     tot_wasm_data = []
-    for i in wsd:
-        tot_wasm_data.append({
-            "gemm.c.bin": i
-        })
 
-    # tot_hcomp_data = []
-
-    # for i in range(0, N_TRIALS):
-    #     print("HCOMP BENCHMARK #{}:".format(i + 1))
-    #     tot_hcomp_data.append(hcomp_bench())
-    #     print()
-    # print("------------------")
-    # print()
-
-    # tot_wasm_data = []
-
-    # for i in range(0, N_TRIALS):
-    #     print("WASM BENCHMARK #{}:".format(i + 1))
-    #     tot_wasm_data.append(wasm_bench())
-    #     print()
-    # print("------------------")
-    # print()
+    for i in range(0, N_TRIALS):
+        print("WASM BENCHMARK #{}:".format(i + 1))
+        tot_wasm_data.append(wasm_bench())
+        print()
+    print("------------------")
+    print()
 
     #start plotting
     if not os.path.isdir("./dat"):

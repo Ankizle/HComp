@@ -12,8 +12,19 @@
 
 #include "hcompx.h"
 #include "xvfbwrapper.h"
+#include "vnc.h"
 
-struct HCXDisp openDisp(char* progp, Window parent) {
+struct HCXDisp openDisp(Window parent) {
+
+    struct HCXDisp hx;
+    hx.parent = parent;
+
+    hx.main = XOpenDisplay(NULL);
+
     struct Xvfb xs = initvfbDefault();
-    startvfb(xs);
+    startvfb(&xs);
+    hx.xvfb = &xs;
+
+    openvnc(&hx);
+    return hx;
 }

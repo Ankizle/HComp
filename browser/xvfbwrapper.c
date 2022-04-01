@@ -1,23 +1,25 @@
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include <X11/Xlib.h>
+#include <X11/Xatom.h>
 
 #include "xvfbwrapper.h"
 
-struct Xvfb initvfb(int width, int height, int colordepth) {
+struct Xvfb initvfb() {
     struct Xvfb x;
-    x.width = width;
-    x.height = height;
-    x.colordepth = colordepth;
+    return x;
 }
 
 struct Xvfb initvfbDefault() {
     return initvfb(800, 800, 24);
 }
 
-void startvfb(struct Xvfb) {
-    // if (fork() != 0) return;
-    // char* argv[] = {":1", NULL};
-    execl("/usr/bin/Xvfb :1", NULL);
+void startvfb(struct Xvfb* xv) {
+    popen("/usr/bin/Xvfb :1", "r"); //init Xvfb server
+    popen("DISPLAY=:1 /usr/bin/fluxbox", "r"); //init the window manager
+    popen("/usr/bin/x11vnc -display :1 -bg -forever -nopw -quiet -listen localhost -xkb", "r"); //init x11vnc
+    sleep(1);
+    (*xv).output = XOpenDisplay(":1");
 }

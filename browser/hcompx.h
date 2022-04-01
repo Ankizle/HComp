@@ -10,18 +10,20 @@ extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+#include "xvfbwrapper.h"
+
 //HComp display window
 struct HCXDisp {
-    Display* d;
-    Display* hd;
-    XVisualInfo vi;
+    Display* main;
+    Window parent;
+    Window vncview;
+    struct Xvfb* xvfb;
 };
 
 /*
-    1 (progp) - program [to execute] path
-    2 (parent) - parent window to embed the server in
+    1 (parent) - parent window to embed the server in
 */
-struct HCXDisp openDisp(char*, Window);
+struct HCXDisp openDisp(Window);
 
 #ifdef __cplusplus
 }

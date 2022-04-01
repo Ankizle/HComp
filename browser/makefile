@@ -2,7 +2,7 @@ CC = gcc
 CXX = g++
 
 OPS = -fPIC
-OBJS = hcompx.o xvfbwrapper.o
+OBJS = hcompx.o xvfbwrapper.o vnc.o
 
 OUTFILE = browser.bin
 
@@ -18,4 +18,7 @@ hcompx.o: hcompx.c
 	$(CC) -c $(X11) $< -o $@
 
 xvfbwrapper.o: xvfbwrapper.c
+	$(CC) -c $< -o $@
+
+vnc.o: vnc.c
 	$(CC) -c $< -o $@
